@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+*.pdf
+# pi_x1_bench.py writes results next to itself; published results live in results/x1/
+feasibility/x1_results_*.json
+.ruff_cache/

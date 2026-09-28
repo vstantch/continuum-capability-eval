@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\caption{\textbf{Measured (this work).} X1 --- board-level energy per delegation-chain verification on the lab Pi 4, by chain depth. Sustained throughput is the mean over a 60\,s fixed-duration loop per depth; energy is the whole-board load--idle power delta (3.02\,W load over a 1.84\,W idle baseline, eyeball-read off an inline USB-C power meter, $\pm0.03$\,W read uncertainty) divided by throughput. Governor \texttt{ondemand} for this run (meter insertion power-cycles the board and does not persist the governor); clock held 1.8\,GHz throughout and per-depth latencies matched the \texttt{performance}-governor run within 0.4\%. A single eyeball-read whole-board figure, reported as exactly that.}
+\label{tab:bench-energy}
+\begin{tabular}{r r r r}
+\toprule
+Depth & Throughput (ops/s) & Energy/verify (mJ) & Energy/hop (mJ) \\
+\midrule
+1 & 3145.2 & 0.375 & 0.375 \\
+2 & 1545.9 & 0.763 & 0.382 \\
+3 & 1023.1 & 1.153 & 0.384 \\
+4 & 765.9 & 1.541 & 0.385 \\
+6 & 509.0 & 2.318 & 0.386 \\
+\bottomrule
+\end{tabular}
+\end{table}

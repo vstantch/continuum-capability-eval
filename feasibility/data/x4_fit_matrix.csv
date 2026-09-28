@@ -1,0 +1,11 @@
+depth,encoding,size_bytes,lorawan_dr0,lorawan_dr5,ble_att_default,ble_dle,ieee802154_frame,coap_no_blockwise,mqtt
+1,json,574,0,0,0,0,0,1,1
+1,cbor,238,0,0,0,1,0,1,1
+2,json,1067,0,0,0,0,0,0,1
+2,cbor,446,0,0,0,0,0,1,1
+3,json,1572,0,0,0,0,0,0,1
+3,cbor,664,0,0,0,0,0,1,1
+4,json,2078,0,0,0,0,0,0,1
+4,cbor,882,0,0,0,0,0,1,1
+6,json,3091,0,0,0,0,0,0,1
+6,cbor,1321,0,0,0,0,0,0,1

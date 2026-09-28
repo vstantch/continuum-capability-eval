@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\caption{Serialized capability-chain size and transport-payload fit by delegation depth (compact JSON vs.\ CBOR with integer keys). Sizes are exact serializations; transport budgets are the application-payload maxima of each standard (Section~\ref{sec:eval-x4}).}
+\label{tab:x4-sizes}
+\begin{tabular}{r rr r ccccccc}
+\toprule
+Depth & JSON (B) & CBOR (B) & CBOR/JSON & \rotatebox{90}{lorawan\_dr0} & \rotatebox{90}{lorawan\_dr5} & \rotatebox{90}{ble\_att\_default} & \rotatebox{90}{ble\_dle} & \rotatebox{90}{ieee802154\_frame} & \rotatebox{90}{coap\_no\_blockwise} & \rotatebox{90}{mqtt} \\
+\midrule
+1 & 574 & 238 & 0.415 & -- & -- & -- & C & -- & \checkmark & \checkmark \\
+2 & 1067 & 446 & 0.418 & -- & -- & -- & -- & -- & C & \checkmark \\
+3 & 1572 & 664 & 0.422 & -- & -- & -- & -- & -- & C & \checkmark \\
+4 & 2078 & 882 & 0.424 & -- & -- & -- & -- & -- & C & \checkmark \\
+6 & 3091 & 1321 & 0.427 & -- & -- & -- & -- & -- & -- & \checkmark \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+\footnotesize \checkmark: both encodings fit; C: only CBOR fits; --: neither fits.
+\end{table}

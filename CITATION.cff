@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this artifact, please cite it as below."
+title: "continuum-capability-eval: reproducibility artifact for capability-based authorization in the cloud-fog-edge continuum"
+type: software
+authors:
+  - family-names: Stantchev
+    given-names: Vladimir
+    orcid: "https://orcid.org/0000-0002-1551-419X"
+    affiliation: "SRH University Heidelberg"
+    email: stantchev@computer.org
+repository-code: "https://github.com/vstantch/continuum-capability-eval"
+license: MIT
+keywords:
+  - capability-based access control
+  - cloud-fog-edge continuum
+  - offline authorization
+  - internet of things
+  - reproducibility

@@ -1,0 +1,6 @@
+platform,label,depth,sustained_ops_per_s,idle_w,load_w
+lab,lab-pi4-01,1,3145.204,1.84,3.02
+lab,lab-pi4-01,2,1545.901,1.84,3.02
+lab,lab-pi4-01,3,1023.095,1.84,3.02
+lab,lab-pi4-01,4,765.899,1.84,3.02
+lab,lab-pi4-01,6,508.996,1.84,3.02

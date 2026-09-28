@@ -1,0 +1,110 @@
+{
+  "benchmark": "pi_x1_bench",
+  "tier": "X1-fog",
+  "platform": "lab",
+  "label": "lab-pi3-01",
+  "sandbox_indicative": false,
+  "warning": null,
+  "quick": false,
+  "N": 10000,
+  "warmup": 1000,
+  "depths": [
+    1,
+    2,
+    3,
+    4,
+    6
+  ],
+  "seeds": {
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "6": 0
+  },
+  "correctness_gate": {
+    "suite": "test_vectors.py",
+    "vectors_passed": 19,
+    "vectors_total": 19,
+    "all_passed": true
+  },
+  "environment": {
+    "device_model": "Raspberry Pi 3 Model B Rev 1.2",
+    "is_raspberry_pi": true,
+    "pi_detect_source": "device-tree",
+    "machine": "aarch64",
+    "system": "Linux",
+    "release": "6.12.93+rpt-rpi-v8",
+    "python": "3.11.2",
+    "hostname": "lab-pi3-01",
+    "cpu_governor": "performance",
+    "cpu_freq_mhz": 1200.0,
+    "temp_before_c": 47.2,
+    "timestamp_utc": "2026-07-27T11:49:04.795962+00:00",
+    "temp_after_c": 56.4
+  },
+  "results_by_depth": {
+    "1": {
+      "n": 10000,
+      "p50_us": 611.6,
+      "p90_us": 629.151,
+      "p99_us": 646.184,
+      "mean_us": 615.422,
+      "min_us": 607.381,
+      "depth": 1,
+      "seed_offset": 0
+    },
+    "2": {
+      "n": 10000,
+      "p50_us": 1254.392,
+      "p90_us": 1275.537,
+      "p99_us": 1293.454,
+      "mean_us": 1260.084,
+      "min_us": 1244.494,
+      "depth": 2,
+      "seed_offset": 0
+    },
+    "3": {
+      "n": 10000,
+      "p50_us": 1908.16,
+      "p90_us": 1922.949,
+      "p99_us": 1961.028,
+      "mean_us": 1909.678,
+      "min_us": 1884.986,
+      "depth": 3,
+      "seed_offset": 0
+    },
+    "4": {
+      "n": 10000,
+      "p50_us": 2551.976,
+      "p90_us": 2565.053,
+      "p99_us": 2593.269,
+      "mean_us": 2550.435,
+      "min_us": 2523.646,
+      "depth": 4,
+      "seed_offset": 0
+    },
+    "6": {
+      "n": 10000,
+      "p50_us": 3836.572,
+      "p90_us": 3848.923,
+      "p99_us": 3877.682,
+      "mean_us": 3839.595,
+      "min_us": 3803.709,
+      "depth": 6,
+      "seed_offset": 0
+    }
+  },
+  "energy": {
+    "board_level_mode": false,
+    "idle_baseline_s": null,
+    "sustained_seconds_requested": null,
+    "sustained_by_depth": {},
+    "operator_reported_power": {
+      "idle_w": null,
+      "load_w": null,
+      "note": "manual inline USB power-meter readings entered by the operator; NOT measured by this script."
+    },
+    "energy_per_op_by_depth": {}
+  }
+}

@@ -1,0 +1,11 @@
+depth,encoding,size_bytes
+1,json,574
+1,cbor,238
+2,json,1067
+2,cbor,446
+3,json,1572
+3,cbor,664
+4,json,2078
+4,cbor,882
+6,json,3091
+6,cbor,1321

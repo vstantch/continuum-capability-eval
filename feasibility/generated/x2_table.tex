@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\caption{Capability availability and revocation-staleness trade at representative grid points (offline duration $D$, expiry horizon $H$; staleness at epoch $E{=}15$\,min). Availability is the fraction of the offline window the held capability stays exercisable; the remote-PDP baseline is $0$ throughout disconnection. Mean over 10{,}000 seeded trials.}
+\label{tab:x2-avail}
+\begin{tabular}{ll rr r}
+\toprule
+$D$ & $H$ & Avail. (cap.) & Avail. (PDP) & Mean staleness \\
+\midrule
+1min & 1h & 0.991 & 0.000 & 30s \\
+1min & 8h & 0.999 & 0.000 & 30s \\
+1min & 24h & 1.000 & 0.000 & 30s \\
+\addlinespace
+3971s & 1h & 0.455 & 0.000 & 8.8min \\
+3971s & 8h & 0.934 & 0.000 & 30.1min \\
+3971s & 24h & 0.977 & 0.000 & 32.5min \\
+\addlinespace
+48h & 1h & 0.010 & 0.000 & 13s \\
+48h & 8h & 0.084 & 0.000 & 13.4min \\
+48h & 24h & 0.249 & 0.000 & 2.00h \\
+\addlinespace
+\bottomrule
+\end{tabular}
+\end{table}
