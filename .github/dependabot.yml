@@ -1,10 +1,11 @@
 version: 2
 updates:
+  # Pins reproduce the published tables; take security updates only.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
