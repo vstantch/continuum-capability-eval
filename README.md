@@ -1,6 +1,6 @@
 # continuum-capability-eval
 
-Reproducibility artifact for the manuscript *Authorization That Survives Disconnection: Capability-Based Security and Portable Evidence for the Cloud-Fog-Edge Continuum* (V. Stantchev), prepared for the MDPI *Future Internet* special issue "Trustworthy AI and Secure Cloud-Fog-Edge Continuum for the Internet of Things".
+Reproducibility artifact for the manuscript *Authorization That Survives Disconnection: Capability-Based Security and Portable Evidence for the Cloud-Fog-Edge Continuum* (V. Stantchev), submitted to the MDPI *Future Internet* special issue "Trustworthy AI and Secure Cloud-Fog-Edge Continuum for the Internet of Things" (manuscript futureinternet-4626518, 28 September 2026).
 
 Every number in the paper's evaluation comes from this repository: a reference implementation of cloud-rooted, attenuation-only capability chains, the correctness vectors that gate it, the scripts that produce each result CSV, the raw result files from the benchmark boards, and the script that turns the CSVs into the paper's LaTeX tables.
 
