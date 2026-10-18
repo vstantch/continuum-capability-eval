@@ -1,18 +1,18 @@
 \begin{table}[htbp]
 \centering
-\caption{Serialized capability-chain size and transport-payload fit by delegation depth (compact JSON vs.\ CBOR with integer keys). Sizes are exact serializations; transport budgets are the application-payload maxima of each standard (Section~\ref{sec:eval-x4}).}
+\caption{Serialized capability-chain size and transport-payload fit by delegation depth (compact JSON vs.\ CBOR with integer keys). Sizes are exact serializations. Each transport column gives the application-payload budget under the stated configuration: LoRaWAN EU863-870 with FOpts empty, at DR0 and at DR5 with and without repeater compatibility (Regional Parameters 1.0.3, Tables 8--9); BLE as one ATT notification or Write Command at the default ATT\_MTU of 23 and at ATT\_MTU${}\geq{}$247 with LE Data Length Extension at 251\,B; the 127\,B IEEE 802.15.4 PHY payload as an upper bound; CoAP without Block-wise transfer in one IPv6 packet; MQTT at a 1\,MiB broker limit (Section~\ref{sec:eval-x4}).}
 \label{tab:x4-sizes}
-\begin{tabular}{r rr r ccccccc}
+\begin{tabular}{r rr r cccccccc}
 \toprule
-Depth & JSON (B) & CBOR (B) & CBOR/JSON & \rotatebox{90}{lorawan\_dr0} & \rotatebox{90}{lorawan\_dr5} & \rotatebox{90}{ble\_att\_default} & \rotatebox{90}{ble\_dle} & \rotatebox{90}{ieee802154\_frame} & \rotatebox{90}{coap\_no\_blockwise} & \rotatebox{90}{mqtt} \\
+Depth & JSON (B) & CBOR (B) & CBOR/JSON & \rotatebox{90}{LoRa DR0 (51)} & \rotatebox{90}{LoRa DR5 rep. (222)} & \rotatebox{90}{LoRa DR5 (242)} & \rotatebox{90}{BLE default (20)} & \rotatebox{90}{BLE DLE (244)} & \rotatebox{90}{802.15.4 (127)} & \rotatebox{90}{CoAP (1024)} & \rotatebox{90}{MQTT (1\,MiB)} \\
 \midrule
-1 & 574 & 238 & 0.415 & -- & -- & -- & C & -- & \checkmark & \checkmark \\
-2 & 1067 & 446 & 0.418 & -- & -- & -- & -- & -- & C & \checkmark \\
-3 & 1572 & 664 & 0.422 & -- & -- & -- & -- & -- & C & \checkmark \\
-4 & 2078 & 882 & 0.424 & -- & -- & -- & -- & -- & C & \checkmark \\
-6 & 3091 & 1321 & 0.427 & -- & -- & -- & -- & -- & -- & \checkmark \\
+1 & 574 & 238 & 0.415 & -- & -- & C & -- & C & -- & \checkmark & \checkmark \\
+2 & 1067 & 446 & 0.418 & -- & -- & -- & -- & -- & -- & C & \checkmark \\
+3 & 1572 & 664 & 0.422 & -- & -- & -- & -- & -- & -- & C & \checkmark \\
+4 & 2078 & 882 & 0.424 & -- & -- & -- & -- & -- & -- & C & \checkmark \\
+6 & 3091 & 1321 & 0.427 & -- & -- & -- & -- & -- & -- & -- & \checkmark \\
 \bottomrule
 \end{tabular}
 \par\smallskip
-\footnotesize \checkmark: both encodings fit; C: only CBOR fits; --: neither fits.
+\footnotesize Budgets in bytes. \checkmark: both encodings fit; C: only CBOR fits; --: neither fits.
 \end{table}

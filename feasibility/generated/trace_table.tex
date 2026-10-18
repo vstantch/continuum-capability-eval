@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\caption{Worked example: successive requests from one sensor at one fog verifier, as the reference implementation processes them (\texttt{request\_trace.py}). Depth-4 IoMT chain (the device sub-delegates to one sensor), effective caveats: topic \texttt{ward3/bed12/vitals/hr}, 12 exercises per minute. $t$ is verifier time in seconds after the first request; Ctr is the request counter. Every row, allow or deny, appends one evidence record; step~5 aggregates ten accepted requests. Before step~9 the verifier installs epoch~1, which revokes the gateway-to-device hop.}
+\label{tab:trace}
+\begin{tabular}{r r r l l l}
+\toprule
+Step & $t$ & Ctr & Signed by & Request & Verdict and reason \\
+\midrule
+1 & 0 & 1 & sensor & topic vitals/hr & allow \\
+2 & 1 & 1 & sensor & replay of step 1 & deny: replayed or reordered request \\
+3 & 2 & 2 & device & parent key, not the leaf key & deny: no proof of possession of the leaf key \\
+4 & 3 & 2 & sensor & topic meds/rate & deny: action topic outside topic\_prefix \\
+5 & 4--13 & 3--12 & sensor & 10 requests & allow \\
+6 & 14 & 13 & sensor & 12th exercise in the minute & allow \\
+7 & 15 & 14 & sensor & 13th in the minute & deny: action rate exceeds rate\_limit\_per\_min \\
+8 & 61 & 15 & sensor & step 1 has left the window & allow \\
+9 & 62 & 16 & sensor & after epoch 1 & deny: chain contains a revoked hop \\
+\bottomrule
+\end{tabular}
+\end{table}

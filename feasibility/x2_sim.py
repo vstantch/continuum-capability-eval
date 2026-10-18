@@ -28,6 +28,11 @@ Metrics (per grid point, over N=10_000 seeded trials)
   next epoch boundary, so honored time may extend by up to a uniform wait in
   [0,E]:  staleness_epoch = max(0, min(t_exp, D + w) - r), w ~ U(0,E).
   (staleness_epoch is a labelled extension; staleness_spec is the spec metric.)
+  The unconditional means average over all trials, including those in which
+  the capability expired before the revocation (staleness 0). We therefore
+  also report the fraction of trials in which the capability is still
+  honored at the revocation instant and the mean staleness over those trials
+  only (the exposure of a credential that is live when revoked).
 
 Baseline: remote-PDP availability during full disconnection = 0 (cannot reach
 the decision point), independent of D,H,E.
@@ -115,6 +120,11 @@ def simulate_staleness() -> list[dict]:
                 # epoch-aware extension: reconnect + wait to next epoch boundary
                 honored_until_e = np.minimum(t_exp, D + w)
                 stale_epoch = np.maximum(0.0, honored_until_e - r)
+                # conditional on the credential still being honored when it is
+                # revoked (revocation before expiry); trials where it expired
+                # first contribute zero to the unconditional means above.
+                live = stale_spec > 0
+                live_e = stale_epoch > 0
                 rows.append(
                     {
                         "D_seconds": D,
@@ -125,6 +135,11 @@ def simulate_staleness() -> list[dict]:
                         "max_staleness_spec_s": round(float(stale_spec.max()), 4),
                         "mean_staleness_epoch_s": round(float(stale_epoch.mean()), 4),
                         "max_staleness_epoch_s": round(float(stale_epoch.max()), 4),
+                        "frac_live_at_revocation": round(float(live.mean()), 6),
+                        "mean_staleness_spec_live_s": round(float(stale_spec[live].mean()), 4)
+                        if live.any() else 0.0,
+                        "mean_staleness_epoch_live_s": round(float(stale_epoch[live_e].mean()), 4)
+                        if live_e.any() else 0.0,
                     }
                 )
     return rows
@@ -157,7 +172,9 @@ if __name__ == "__main__":
         s,
         ["D_seconds", "H_seconds", "E_seconds", "n_trials",
          "mean_staleness_spec_s", "max_staleness_spec_s",
-         "mean_staleness_epoch_s", "max_staleness_epoch_s"],
+         "mean_staleness_epoch_s", "max_staleness_epoch_s",
+         "frac_live_at_revocation", "mean_staleness_spec_live_s",
+         "mean_staleness_epoch_live_s"],
     )
 
     # A couple of representative readouts.

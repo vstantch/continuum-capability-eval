@@ -29,6 +29,7 @@ jobs:
         run: |
           python x4_sizes.py
           python x2_sim.py
+          python request_trace.py
       - name: X1 provenance
         working-directory: feasibility
         run: python check_x1_provenance.py

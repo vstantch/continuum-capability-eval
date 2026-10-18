@@ -12,10 +12,11 @@ Every number in the paper's evaluation comes from this repository: a reference i
 | X1 | Board-level energy, lab Pi 4 | `pi_x1_bench.py --idle-baseline 60 --sustained 60` | `results/x1/…144309.json` → `data/bench_energy.csv` | `generated/bench_energy_table.tex` |
 | X2 | Availability and revocation staleness under disconnection | `x2_sim.py` | `data/x2_availability.csv`, `data/x2_staleness.csv` | `generated/x2_table.tex` |
 | X3 | Credential size against transport payload budgets | `x4_sizes.py` | `data/x4_sizes.csv`, `data/x4_fit_matrix.csv` | `generated/x4_table.tex` |
+| Sec. 5 | Worked example: successive requests at one verifier | `request_trace.py` | `data/request_trace.csv` | (rendered in the paper) |
 
 All paths are under `feasibility/`. The paper numbers the size experiment X3; the scripts and files keep the working name `x4_*`.
 
-`contgrant.py` is the reference implementation: Ed25519 per-hop signatures, child-key succession, four caveats (topic prefix, rate, geofence, validity window) that may only narrow, a fail-closed verifier, and JSON and CBOR encodings. `test_vectors.py` holds the 19 golden and adversarial vectors. `mkresults.py` writes the tables. `check_x1_provenance.py` confirms that every X1 row in the CSVs equals the corresponding field in the board's result file.
+`contgrant.py` is the reference implementation: Ed25519 per-hop signatures, child-key succession, four caveats (topic prefix, rate, geofence, validity window) that may only narrow, a fail-closed verifier, and JSON and CBOR encodings. Since v1.1 it also handles requests (proof of possession of the leaf key, replay counters, rate counted by the verifier, clock-skew bound, restart warm-up, root-signed revocation epochs) and writes a hash-chained, signed evidence log, and its decoders reject malformed, duplicate-key, non-canonical, and out-of-range input. `test_vectors.py` holds the golden and adversarial vectors: 19 in v1.0, 31 since v1.1. `mkresults.py` writes the tables. `check_x1_provenance.py` confirms that every X1 row in the CSVs equals the corresponding field in the board's result file.
 
 ## Reproduce
 
@@ -25,9 +26,10 @@ Python 3.11, dependencies pinned by hash:
 python3.11 -m venv .venv
 .venv/bin/pip install --require-hashes -r requirements.txt
 cd feasibility
-../.venv/bin/python test_vectors.py          # 19/19 must pass
+../.venv/bin/python test_vectors.py          # 31/31 must pass
 ../.venv/bin/python x4_sizes.py              # X3 sizes and transport fit
 ../.venv/bin/python x2_sim.py                # X2, seeded (base seed 20260718, 10,000 trials per point)
+../.venv/bin/python request_trace.py         # worked request example
 ../.venv/bin/python check_x1_provenance.py   # X1 CSVs against board JSONs
 ../.venv/bin/python mkresults.py             # regenerate generated/*.tex
 git diff --exit-code                         # nothing may change
@@ -52,13 +54,17 @@ The script runs the full vector suite first and refuses to time a verifier that 
 | `lab-pi3-01` | Raspberry Pi 3 Model B Rev 1.2 | 1.2 GHz | performance | 2026-07-27 | `x1_results_lab_lab-pi3-01_20260727_135056.json` |
 | `lab-pi4-01` energy | Raspberry Pi 4 Model B Rev 1.5 | 1.8 GHz | ondemand | 2026-07-27 | `x1_results_lab_lab-pi4-01_20260727_144309.json` |
 
-Every run passed the 19-vector gate and used N = 10,000 timed verifications per depth after 1,000 warmup runs. Platforms are reported side by side and never merged or averaged: the two Pi 4s are the same model on different hosting, and a gap between them is a finding. The energy run used `ondemand` because inserting the meter power-cycles the board; its clock held 1.8 GHz and its p50 latencies match the `performance` run within 0.5%.
+Every run passed the 19-vector gate of v1.0 and used N = 10,000 timed verifications per depth after 1,000 warmup runs. Platforms are reported side by side and never merged or averaged: the two Pi 4s are the same model on different hosting, and a gap between them is a finding. The energy run used `ondemand` because inserting the meter power-cycles the board; its clock held 1.8 GHz and its p50 latencies match the `performance` run within 0.5%.
 
 The idle and load wattages in `bench_energy.csv` (1.84 W, 3.02 W) are the operator's readings from an inline USB-C meter. The script does not measure them, so they have no source in the JSON. Sustained throughput does, and the provenance check covers it.
 
 The hardware benchmarks were run by Kunal Gawande (SRH University Heidelberg). Result files are published as the boards wrote them.
 
 `bench_verify.csv` also keeps five rows marked `sandbox_indicative=true` from an early development-host run. `mkresults.py` never renders them and the paper does not cite them.
+
+## v1.1 (revision) and the board measurements
+
+The hardware runs above were made with v1.0 and gated by its 19 vectors. v1.1 adds request handling, the evidence log, and stricter decoding, and extends the suite to 31 vectors. The benchmark times `verify_chain` alone, which v1.1 leaves unchanged, so the X1 figures still describe the code at this tag. Request verification adds one Ed25519 verification (the proof of possession) to each request; it has not been timed on the boards.
 
 ## Not in this release
 

@@ -276,6 +276,219 @@ def test_encodings_equivalent():
 
 
 # ---------------------------------------------------------------------------
+# WIRE ROBUSTNESS (added for v1.1): malformed input, duplicate keys,
+# non-canonical CBOR, type confusion, out-of-range integers, Unicode
+# normalization, signature malleability. Each must end in VerificationError,
+# never in another exception and never in acceptance.
+# ---------------------------------------------------------------------------
+def _expect_decode_reject(decode, blob):
+    try:
+        decode(blob)
+    except VerificationError:
+        return
+    raise AssertionError("expected VerificationError on decode")
+
+
+def test_wire_truncated_inputs():
+    chain, _, _, _, _ = build_base_chain()
+    j, c = encode_json(chain), encode_cbor(chain)
+    for n in (1, 5, len(j) // 2):
+        _expect_decode_reject(decode_json, j[:-n])
+    for n in (1, 5, len(c) // 2):
+        _expect_decode_reject(decode_cbor, c[:-n])
+    _expect_decode_reject(decode_json, b"\xff\xfe")
+    _expect_decode_reject(decode_cbor, b"")
+
+
+def test_wire_duplicate_json_key():
+    chain, _, _, _, _ = build_base_chain()
+    s = encode_json(chain).decode()
+    dup = s.replace('"caveats":{', '"caveats":{"topic_prefix":"x/",', 1)
+    _expect_decode_reject(decode_json, dup.encode())
+
+
+def test_wire_noncanonical_cbor():
+    import cbor2
+    chain, _, _, _, _ = build_base_chain()
+    c = encode_cbor(chain)
+    _expect_decode_reject(decode_cbor, c + b"\x00")  # trailing bytes
+    obj = cbor2.loads(c)
+    # Reverse the top-level key order: same content, non-canonical bytes.
+    swapped = cbor2.dumps({cg._K_HOPS: obj[cg._K_HOPS], cg._K_ROOT: obj[cg._K_ROOT]})
+    assert swapped != c
+    _expect_decode_reject(decode_cbor, swapped)
+
+
+def test_wire_type_confusion():
+    import json
+    chain, _, _, _, _ = build_base_chain()
+    base = json.loads(encode_json(chain).decode())
+    bad_values = [
+        ("rate_limit_per_min", "120"),
+        ("rate_limit_per_min", True),
+        ("rate_limit_per_min", 2**40),  # beyond the 32-bit bound
+        ("rate_limit_per_min", -1),
+        ("valid_until", 2**70),  # beyond the 64-bit bound
+        ("valid_until", 1.5),
+        ("geofence", [52.52, 13.405]),
+        ("geofence", [52.52, 13.405, "500"]),
+        ("geofence", [95.0, 13.405, 500.0]),
+        ("topic_prefix", 7),
+    ]
+    for field_name, v in bad_values:
+        obj = copy.deepcopy(base)
+        obj["hops"][1]["caveats"][field_name] = v
+        _expect_decode_reject(decode_json, json.dumps(obj).encode())
+
+
+def test_wire_unicode_not_nfc():
+    # "e" + combining acute (NFD) is rejected; an NFC topic is accepted.
+    root, k1 = mkkey(0), mkkey(1)
+    for topic, ok in (("ward3/café/", True), ("ward3/café/", False)):
+        chain = ChainBuilder(root).add_hop("cloud", "fog", k1, Caveats(topic_prefix=topic)).build()
+        try:
+            decode_json(encode_json(chain))
+            accepted = True
+        except VerificationError:
+            accepted = False
+        assert accepted == ok, topic
+
+
+def test_wire_signature_malleability():
+    # S + L is the same signature in a non-canonical form; it must not verify.
+    L = 2**252 + 27742317777372353535851937790883648493
+    chain, anchor, action, _, _ = build_base_chain()
+    sig = chain.hops[0].signature
+    s = int.from_bytes(sig[32:], "little")
+    chain.hops[0].signature = sig[:32] + (s + L).to_bytes(32, "little")
+    _expect_reject(chain, anchor, action)
+
+
+# ---------------------------------------------------------------------------
+# REQUESTS (added for v1.1): proof of possession, replay, rate counted by the
+# verifier, clock skew, restart warm-up, revocation epochs, evidence chain.
+# ---------------------------------------------------------------------------
+T0 = 1_700_000_500
+HERE_LOC = (52.5201, 13.4051)
+
+
+def _request_setup():
+    chain, anchor, _, keys, _ = build_base_chain()
+    leaf = keys[3]
+    rv = cg.RequestVerifier(anchor, boot_time=T0 - 3600)
+    return chain, anchor, leaf, rv, keys
+
+
+def _req(chain, leaf, ctr, ts, topic="ward3/bed12/vitals/hr"):
+    import hashlib
+    r = cg.Request(cg.chain_digest(chain), topic, hashlib.sha256(b"hr=72").digest(), ctr, ts)
+    return r, cg.sign_request(leaf, r)
+
+
+def _expect_request_reject(rv, chain, r, sig, now, loc=HERE_LOC):
+    try:
+        rv.verify(chain, r, sig, now, loc)
+    except VerificationError:
+        return
+    raise AssertionError("expected request rejection")
+
+
+def test_request_accept_and_pop():
+    chain, _, leaf, rv, keys = _request_setup()
+    r, sig = _req(chain, leaf, 1, T0)
+    assert rv.verify(chain, r, sig, T0, HERE_LOC)
+    # Signed by the gateway key instead of the leaf: no proof of possession.
+    r2, sig2 = _req(chain, keys[2], 2, T0)
+    _expect_request_reject(rv, chain, r2, sig2, T0)
+    # Request bound to another chain digest.
+    r3 = replace(r, counter=3, chain_digest=b"\x00" * 32)
+    _expect_request_reject(rv, chain, r3, cg.sign_request(leaf, r3), T0)
+
+
+def test_request_replay_and_skew():
+    chain, _, leaf, rv, _ = _request_setup()
+    r, sig = _req(chain, leaf, 7, T0)
+    rv.verify(chain, r, sig, T0, HERE_LOC)
+    _expect_request_reject(rv, chain, r, sig, T0 + 1)  # exact replay
+    r_old, s_old = _req(chain, leaf, 6, T0 + 1)
+    _expect_request_reject(rv, chain, r_old, s_old, T0 + 1)  # lower counter
+    r_late, s_late = _req(chain, leaf, 8, T0 - 31)
+    _expect_request_reject(rv, chain, r_late, s_late, T0)  # outside 30 s skew
+
+
+def test_request_rate_counted_by_verifier():
+    # Effective limit is 30/min (hop 2). The 31st request in one minute is
+    # refused; once the window slides, requests are accepted again.
+    chain, _, leaf, rv, _ = _request_setup()
+    for i in range(30):
+        r, s = _req(chain, leaf, i + 1, T0 + i)
+        rv.verify(chain, r, s, T0 + i, HERE_LOC)
+    r, s = _req(chain, leaf, 31, T0 + 30)
+    _expect_request_reject(rv, chain, r, s, T0 + 30)
+    r, s = _req(chain, leaf, 32, T0 + 61)
+    assert rv.verify(chain, r, s, T0 + 61, HERE_LOC)
+
+
+def test_request_restart_warmup():
+    chain, anchor, leaf, _, _ = _request_setup()
+    rv = cg.RequestVerifier(anchor, boot_time=T0)
+    r, s = _req(chain, leaf, 1, T0 + 10)
+    _expect_request_reject(rv, chain, r, s, T0 + 10)  # inside warm-up
+    r, s = _req(chain, leaf, 2, T0 + 60)
+    assert rv.verify(chain, r, s, T0 + 60, HERE_LOC)
+
+
+def test_request_revoked_by_epoch():
+    chain, anchor, leaf, rv, keys = _request_setup()
+    r, s = _req(chain, leaf, 1, T0)
+    rv.verify(chain, r, s, T0, HERE_LOC)
+    # An epoch not signed by the root is refused.
+    try:
+        rv.install_epoch(cg.sign_epoch(keys[1], 1, {cg.hop_id(chain.hops[1])}))
+        raise AssertionError("epoch from non-root key accepted")
+    except VerificationError:
+        pass
+    rv.install_epoch(cg.sign_epoch(keys[0], 1, {cg.hop_id(chain.hops[1])}))
+    r, s = _req(chain, leaf, 2, T0 + 1)
+    _expect_request_reject(rv, chain, r, s, T0 + 1)
+
+
+def test_evidence_chain_detects_tampering():
+    chain, anchor, leaf, _, keys = _request_setup()
+    log = cg.EvidenceLog(keys[1])  # fog writer key
+    rv = cg.RequestVerifier(anchor, boot_time=T0 - 3600, evidence=log)
+    for i in range(4):
+        r, s = _req(chain, leaf, i + 1, T0 + i)
+        rv.decide(chain, r, s, T0 + i, HERE_LOC)
+    r, s = _req(chain, leaf, 4, T0 + 5)  # replayed counter -> deny, recorded
+    assert not rv.decide(chain, r, s, T0 + 5, HERE_LOC)
+    anchored = log.anchor()
+    assert cg.verify_evidence(log.records, log.writer_pub, (anchored,)) == anchored[1]
+    # Modifying an anchored record breaks the chain.
+    edited = copy.deepcopy(log.records)
+    edited[2]["body"]["verdict"] = "deny"
+    try:
+        cg.verify_evidence(edited, log.writer_pub, (anchored,))
+        raise AssertionError("edited record not detected")
+    except VerificationError:
+        pass
+    # Deleting an internal record leaves a sequence gap.
+    try:
+        cg.verify_evidence(log.records[:1] + log.records[2:], log.writer_pub)
+        raise AssertionError("deleted record not detected")
+    except VerificationError:
+        pass
+    # Truncating an anchored tail fails the anchor check; truncating an
+    # unanchored tail does not (documented limit of hash chaining).
+    try:
+        cg.verify_evidence(log.records[:-1], log.writer_pub, (anchored,))
+        raise AssertionError("truncated anchored tail not detected")
+    except VerificationError:
+        pass
+    cg.verify_evidence(log.records[:-1], log.writer_pub)
+
+
+# ---------------------------------------------------------------------------
 # Plain-assert runner (no pytest needed).
 # ---------------------------------------------------------------------------
 def _run_all():

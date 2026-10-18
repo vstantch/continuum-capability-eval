@@ -27,12 +27,26 @@ DEPTHS = [1, 2, 3, 4, 6]
 # frame size. Sources as cited in the paper (Section 6, X3).
 # ---------------------------------------------------------------------------
 TRANSPORT_BUDGETS = {
-    "lorawan_dr0": 51,          # LoRaWAN Regional Parameters, EU868 DR0 max app payload
-    "lorawan_dr5": 222,         # LoRaWAN Regional Parameters, EU868 DR5 max app payload
-    "ble_att_default": 23,      # Bluetooth Core, default ATT_MTU
-    "ble_dle": 244,             # Bluetooth Core, LE Data Length Extension usable payload
-    "ieee802154_frame": 127,    # IEEE 802.15.4 maximum PHY frame
-    "coap_no_blockwise": 1024,  # RFC 7252/7959, recommended un-fragmented CoAP ceiling
+    # LoRaWAN 1.0.3 Regional Parameters rev. A, EU863-870, application payload N
+    # with FOpts empty. DR0-DR2 (SF12-SF10): 51 B. DR4-DR7: 222 B in the
+    # repeater-compatible table (Table 8), 242 B if the device never operates
+    # behind a repeater (Table 9). US902-928 uplink DR3/DR4 allow 242 B as well.
+    "lorawan_dr0": 51,
+    "lorawan_dr5_repeater": 222,
+    "lorawan_dr5": 242,
+    # BLE: one ATT Handle Value Notification or Write Command carries
+    # ATT_MTU - 3 bytes. Default ATT_MTU 23 -> 20 B. With ATT_MTU >= 247
+    # negotiated and LE Data Length Extension at 251 B, 244 B travel in one
+    # link-layer PDU (251 - 4 B L2CAP - 3 B ATT).
+    "ble_att_default": 20,
+    "ble_dle": 244,
+    # IEEE 802.15.4: 127 B is the whole PHY payload (MAC header, FCS and any
+    # 6LoWPAN header come out of it), so this is an upper bound.
+    "ieee802154_frame": 127,
+    # CoAP: RFC 7252 sec. 4.6 -- payload up to 1024 B in a message that fits
+    # one IPv6 packet (1280 B MTU) without Block-wise transfer (RFC 7959).
+    # Over 6LoWPAN, the adaptation layer still fragments such a datagram.
+    "coap_no_blockwise": 1024,
     "mqtt": 1048576,            # MQTT 5.0: effectively unconstrained; 1 MiB broker default
 }
 
